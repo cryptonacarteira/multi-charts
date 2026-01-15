@@ -2,58 +2,89 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Range - Multi Dashboard</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body { margin: 0; background: #06080f; color: white; font-family: sans-serif; overflow: hidden; }
+        /* Força o fundo escuro imediatamente */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: #06080f !important; 
+            color: white; 
+            font-family: sans-serif; 
+            height: 100%; 
+            width: 100%; 
+            overflow: hidden; 
+        }
         header { 
-            height: 45px; background: #131722; display: flex; align-items: center; 
-            padding: 0 20px; border-bottom: 1px solid #2a2e39; justify-content: space-between;
+            height: 45px; 
+            background: #131722; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            border-bottom: 1px solid #2a2e39; 
+            box-sizing: border-box;
         }
         .grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
-            height: calc(100vh - 45px); gap: 2px; padding: 2px; box-sizing: border-box; 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(2, 1fr); 
+            height: calc(100vh - 45px); 
+            gap: 2px; 
+            padding: 2px; 
+            box-sizing: border-box;
+            background-color: #06080f;
         }
-        .chart-container { background: #131722; border: 1px solid #2a2e39; display: flex; flex-direction: column; }
+        .chart-container { 
+            background: #131722; 
+            border: 1px solid #2a2e39; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0; /* Evita que o gráfico quebre a grade */
+        }
         .chart-header { 
-            padding: 6px; background: #1c222d; display: flex; align-items: center; gap: 8px; 
+            padding: 6px; 
+            background: #1c222d; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
             border-bottom: 1px solid #2a2e39;
         }
-        .chart-header span { font-size: 11px; font-weight: bold; color: #2962ff; min-width: 70px; text-transform: uppercase; }
+        .chart-header span { font-size: 11px; font-weight: bold; color: #2962ff; min-width: 60px; }
         .chart-header input { 
-            flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; 
-            font-size: 10px; padding: 4px; border-radius: 3px; outline: none;
+            flex: 1; 
+            background: #06080f; 
+            border: 1px solid #363c4e; 
+            color: #4ade80; 
+            font-size: 10px; 
+            padding: 4px; 
+            border-radius: 3px; 
+            outline: none;
         }
-        .chart-header input:focus { border-color: #2962ff; }
-        .canvas-area { flex: 1; }
+        .canvas-area { flex: 1; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: bold; color: #fff; letter-spacing: 1px;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
-    <div style="font-size: 10px; color: #94a3b8; font-style: italic;">Independente • Sem Bloqueios</div>
+    <div style="font-weight: bold; color: #fff;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
 </header>
 
-<div class="grid" id="mainGrid"></div>
+<div class="grid" id="mainGrid">
+    </div>
 
 <script>
-    // LISTA DE GRÁFICOS - Você pode mudar os nomes abaixo:
     const config = [
-        { id: 'c1', name: 'SPX 500' },
-        { id: 'c2', name: 'NASDAQ' },
-        { id: 'c3', name: 'SPY' },
-        { id: 'c4', name: 'GOLD / XAU' },
-        { id: 'c5', name: 'BITCOIN' },
-        { id: 'c6', name: 'US 10Y / VIX' }
+        { id: 'c1', name: 'SPX 500' }, { id: 'c2', name: 'NASDAQ' }, { id: 'c3', name: 'SPY' },
+        { id: 'c4', name: 'GOLD' }, { id: 'c5', name: 'BITCOIN' }, { id: 'c6', name: 'VIX' }
     ];
 
     const chartObjects = {};
 
-    function init() {
+    function initCharts() {
         const grid = document.getElementById('mainGrid');
-        
+        grid.innerHTML = ''; // Limpa antes de criar
+
         config.forEach(item => {
             const container = document.createElement('div');
             container.className = 'chart-container';
@@ -66,43 +97,38 @@
             `;
             grid.appendChild(container);
 
+            // Inicializa o widget de gráfico
             const chart = LightweightCharts.createChart(document.getElementById(`canvas-${item.id}`), {
-                layout: { backgroundColor: '#131722', textColor: '#d1d4dc', fontSize: 10 },
+                layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
                 grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
-                timeScale: { borderColor: '#2a2e39', timeVisible: true },
-                priceScale: { borderColor: '#2a2e39' },
-                crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+                timeScale: { borderColor: '#2a2e39' },
+                priceScale: { borderColor: '#2a2e39' }
             });
 
             const series = chart.addCandlestickSeries({
                 upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
             });
 
-            // Dados temporários para o gráfico não ficar vazio
-            const mockData = [];
+            // Dados de exemplo para preencher o gráfico
+            const data = [];
             let t = new Date();
             t.setDate(t.getDate() - 100);
-            let p = 100;
             for(let i=0; i<100; i++) {
-                let change = (Math.random() - 0.5) * 2;
-                let open = p;
-                let close = p + change;
-                mockData.push({
+                data.push({
                     time: t.toISOString().split('T')[0],
-                    open: open, high: Math.max(open, close) + 0.5, low: Math.min(open, close) - 0.5, close: close
+                    open: 100 + Math.random(), high: 102, low: 98, close: 100 + Math.random()
                 });
-                p = close;
                 t.setDate(t.getDate() + 1);
             }
-            series.setData(mockData);
+            series.setData(data);
             chart.timeScale().fitContent();
 
             chartObjects[item.id] = { chart, series, lines: [] };
 
-            // Recupera o que foi colado antes
-            const savedData = localStorage.getItem(`range-data-${item.id}`);
-            if(savedData) {
-                document.getElementById(`input-${item.id}`).value = savedData;
+            // Recupera dados salvos no navegador
+            const saved = localStorage.getItem(`range-data-${item.id}`);
+            if(saved) {
+                document.getElementById(`input-${item.id}`).value = saved;
                 processData(item.id);
             }
         });
@@ -113,32 +139,35 @@
         localStorage.setItem(`range-data-${id}`, rawText); 
         
         const obj = chartObjects[id];
-        const segments = rawText.split(',');
+        if (!obj) return;
 
-        // Remove linhas antigas
+        const segments = rawText.split(',');
         obj.lines.forEach(l => obj.series.removePriceLine(l));
         obj.lines = [];
 
-        // Lógica: "Texto, Preço, Texto, Preço"
         for (let i = 0; i < segments.length; i += 2) {
-            const labelText = segments[i]?.trim();
-            const priceValue = parseFloat(segments[i+1]);
-
-            if (!isNaN(priceValue)) {
-                const priceLine = obj.series.createPriceLine({
-                    price: priceValue,
+            const label = segments[i]?.trim();
+            const price = parseFloat(segments[i+1]);
+            if (!isNaN(price)) {
+                const pLine = obj.series.createPriceLine({
+                    price: price,
                     color: '#2962ff',
                     lineWidth: 1,
-                    lineStyle: LightweightCharts.LineStyle.Solid,
                     axisLabelVisible: true,
-                    title: labelText,
+                    title: label,
                 });
-                obj.lines.push(priceLine);
+                obj.lines.push(pLine);
             }
         }
     }
 
-    window.onload = init;
+    // Garante que o script rode após o carregamento da biblioteca
+    window.addEventListener('load', initCharts);
+    // Ajusta o tamanho se a janela mudar
+    window.addEventListener('resize', () => {
+        Object.values(chartObjects).forEach(obj => obj.chart.resize(0,0)); // Força recalcular
+        initCharts(); 
+    });
 </script>
 </body>
 </html>
