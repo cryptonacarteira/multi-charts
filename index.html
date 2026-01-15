@@ -2,8 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Range Levels - Dashboard PRO</title>
+    <title>Crypto Range - Injeção Direta</title>
     <style>
         html, body { height: 100%; margin: 0; padding: 0; background-color: #06080f; color: #ffffff; font-family: sans-serif; overflow: hidden; }
         header { 
@@ -26,14 +25,13 @@
         }
         .chart-box { background: #131722; border: 1px solid #2a2e39; }
         .logo { color: #2962ff; font-weight: bold; font-size: 16px; }
-        .instruction { font-size: 11px; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 5px 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">ANALYZER PRO</div>
-        <div class="instruction">Cole seu código no PINE EDITOR (botão inferior) de cada gráfico</div>
+        <div class="logo">CRYPTO-RANGE PRO</div>
+        <div style="font-size: 11px; color: #4ade80;">MODO: MANUAL SCRIPT INJECTION</div>
     </header>
 
     <div class="grid-container">
@@ -47,12 +45,11 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script type="text/javascript">
-        function loadFullToolChart(id, symbol) {
+        function loadChart(id, symbol) {
             new TradingView.widget({
                 "autosize": true,
                 "symbol": symbol,
                 "interval": "D",
-                "timezone": "America/Sao_Paulo",
                 "theme": "dark",
                 "style": "1",
                 "locale": "br",
@@ -61,26 +58,19 @@
                 "hide_side_toolbar": false,
                 "allow_symbol_change": true,
                 "container_id": id,
-                /* LIBERA TODAS AS FERRAMENTAS INCLUINDO PINE EDITOR */
-                "enabled_features": [
-                    "study_templates", 
-                    "header_layouttoggle",
-                    "pinescript_editor_v5",
-                    "use_localstorage_for_settings_save"
-                ],
-                "studies": [],
-                "overrides": {
-                    "volumePaneSize": "tiny"
-                }
+                "withdateranges": true,
+                /* TENTATIVA DE FORÇAR O PINE EDITOR NO WIDGET */
+                "enabled_features": ["pinescript_editor_v5", "study_templates"],
+                "overrides": { "volumePaneSize": "tiny" }
             });
         }
 
-        loadFullToolChart("c1", "CAPITALCOM:US500");   
-        loadFullToolChart("c2", "CAPITALCOM:US100");   
-        loadFullToolChart("c3", "AMEX:SPY");            
-        loadFullToolChart("c4", "OANDA:XAUUSD");        
-        loadFullToolChart("c5", "NASDAQ:QQQ");          
-        loadFullToolChart("c6", "CBOE:VXX"); 
+        loadChart("c1", "CAPITALCOM:US500");   
+        loadChart("c2", "CAPITALCOM:US100");   
+        loadChart("c3", "AMEX:SPY");            
+        loadChart("c4", "OANDA:XAUUSD");        
+        loadChart("c5", "NASDAQ:QQQ");          
+        loadChart("c6", "CBOE:VXX"); 
     </script>
 </body>
 </html>
