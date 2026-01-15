@@ -2,34 +2,51 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Range - Multi Dashboard</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body { margin: 0; background: #06080f; color: white; font-family: sans-serif; }
-        header { height: 40px; background: #131722; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #2a2e39; font-weight: bold; color: #2962ff; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); height: calc(100vh - 40px); gap: 4px; padding: 4px; box-sizing: border-box; }
+        body { margin: 0; background: #06080f; color: white; font-family: sans-serif; overflow: hidden; }
+        header { 
+            height: 45px; background: #131722; display: flex; align-items: center; 
+            padding: 0 20px; border-bottom: 1px solid #2a2e39; justify-content: space-between;
+        }
+        .grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
+            height: calc(100vh - 45px); gap: 2px; padding: 2px; box-sizing: border-box; 
+        }
         .chart-container { background: #131722; border: 1px solid #2a2e39; display: flex; flex-direction: column; }
-        .chart-header { padding: 5px; background: #1c222d; display: flex; gap: 5px; }
-        .chart-header input { flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; font-size: 10px; padding: 3px; }
-        .chart-header span { font-size: 12px; font-weight: bold; min-width: 50px; color: #94a3b8; }
-        .canvas-area { flex: 1; position: relative; }
+        .chart-header { 
+            padding: 6px; background: #1c222d; display: flex; align-items: center; gap: 8px; 
+            border-bottom: 1px solid #2a2e39;
+        }
+        .chart-header span { font-size: 11px; font-weight: bold; color: #2962ff; min-width: 70px; text-transform: uppercase; }
+        .chart-header input { 
+            flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; 
+            font-size: 10px; padding: 4px; border-radius: 3px; outline: none;
+        }
+        .chart-header input:focus { border-color: #2962ff; }
+        .canvas-area { flex: 1; }
     </style>
 </head>
 <body>
 
-<header>CRYPTO-RANGE MULTI-INPUT</header>
+<header>
+    <div style="font-weight: bold; color: #fff; letter-spacing: 1px;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
+    <div style="font-size: 10px; color: #94a3b8; font-style: italic;">Independente • Sem Bloqueios</div>
+</header>
 
-<div class="grid" id="mainGrid">
-    </div>
+<div class="grid" id="mainGrid"></div>
 
 <script>
-    const assets = [
-        { id: 'c1', name: 'SPX', symbol: 'SPX' },
-        { id: 'c2', name: 'SPY', symbol: 'SPY' },
-        { id: 'c3', name: 'QQQ', symbol: 'QQQ' },
-        { id: 'c4', name: 'XAUUSD', symbol: 'GOLD' },
-        { id: 'c5', name: 'BTCUSDT', symbol: 'BTC' },
-        { id: 'c6', name: 'VIX', symbol: 'VIX' }
+    // LISTA DE GRÁFICOS - Você pode mudar os nomes abaixo:
+    const config = [
+        { id: 'c1', name: 'SPX 500' },
+        { id: 'c2', name: 'NASDAQ' },
+        { id: 'c3', name: 'SPY' },
+        { id: 'c4', name: 'GOLD / XAU' },
+        { id: 'c5', name: 'BITCOIN' },
+        { id: 'c6', name: 'US 10Y / VIX' }
     ];
 
     const chartObjects = {};
@@ -37,80 +54,86 @@
     function init() {
         const grid = document.getElementById('mainGrid');
         
-        assets.forEach(asset => {
-            // Criar estrutura HTML
+        config.forEach(item => {
             const container = document.createElement('div');
             container.className = 'chart-container';
             container.innerHTML = `
                 <div class="chart-header">
-                    <span>${asset.name}</span>
-                    <input type="text" id="input-${asset.id}" placeholder="Cole o texto do ${asset.name}..." oninput="updateChart('${asset.id}')">
+                    <span>${item.name}</span>
+                    <input type="text" id="input-${item.id}" placeholder="Cole os dados aqui..." oninput="processData('${item.id}')">
                 </div>
-                <div class="canvas-area" id="canvas-${asset.id}"></div>
+                <div class="canvas-area" id="canvas-${item.id}"></div>
             `;
             grid.appendChild(container);
 
-            // Criar Gráfico
-            const chart = LightweightCharts.createChart(document.getElementById(`canvas-${asset.id}`), {
-                layout: { backgroundColor: '#131722', textColor: '#d1d4dc' },
+            const chart = LightweightCharts.createChart(document.getElementById(`canvas-${item.id}`), {
+                layout: { backgroundColor: '#131722', textColor: '#d1d4dc', fontSize: 10 },
                 grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
-                timeScale: { borderColor: '#2a2e39' },
+                timeScale: { borderColor: '#2a2e39', timeVisible: true },
+                priceScale: { borderColor: '#2a2e39' },
+                crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
             });
 
-            const candleSeries = chart.addCandlestickSeries({
+            const series = chart.addCandlestickSeries({
                 upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
             });
 
-            // Gerar dados fictícios (Enquanto não conectamos API real)
-            const data = [];
-            let time = new Date(2025, 0, 1);
+            // Dados temporários para o gráfico não ficar vazio
+            const mockData = [];
+            let t = new Date();
+            t.setDate(t.getDate() - 100);
+            let p = 100;
             for(let i=0; i<100; i++) {
-                data.push({
-                    time: time.toISOString().split('T')[0],
-                    open: 100 + Math.random()*10, high: 115, low: 95, close: 105
+                let change = (Math.random() - 0.5) * 2;
+                let open = p;
+                let close = p + change;
+                mockData.push({
+                    time: t.toISOString().split('T')[0],
+                    open: open, high: Math.max(open, close) + 0.5, low: Math.min(open, close) - 0.5, close: close
                 });
-                time.setDate(time.getDate() + 1);
+                p = close;
+                t.setDate(t.getDate() + 1);
             }
-            candleSeries.setData(data);
+            series.setData(mockData);
+            chart.timeScale().fitContent();
 
-            chartObjects[asset.id] = { chart, series: candleSeries, lines: [] };
+            chartObjects[item.id] = { chart, series, lines: [] };
 
-            // Tentar carregar dados salvos do localStorage
-            const saved = localStorage.getItem(`data-${asset.id}`);
-            if(saved) {
-                document.getElementById(`input-${asset.id}`).value = saved;
-                updateChart(asset.id);
+            // Recupera o que foi colado antes
+            const savedData = localStorage.getItem(`range-data-${item.id}`);
+            if(savedData) {
+                document.getElementById(`input-${item.id}`).value = savedData;
+                processData(item.id);
             }
         });
     }
 
-    function updateChart(id) {
-        const raw = document.getElementById(`input-${id}`).value;
-        localStorage.setItem(`data-${id}`, raw); // Salva para não perder ao fechar
+    function processData(id) {
+        const rawText = document.getElementById(`input-${id}`).value;
+        localStorage.setItem(`range-data-${id}`, rawText); 
         
         const obj = chartObjects[id];
-        const parts = raw.split(',');
+        const segments = rawText.split(',');
 
-        // Limpar linhas anteriores
+        // Remove linhas antigas
         obj.lines.forEach(l => obj.series.removePriceLine(l));
         obj.lines = [];
 
-        // Lógica do seu Crypto-Range (Nome, Preço)
-        // Pula de 2 em 2: Texto, Valor, Texto, Valor...
-        for (let i = 0; i < parts.length; i += 2) {
-            const label = parts[i]?.trim();
-            const price = parseFloat(parts[i+1]);
+        // Lógica: "Texto, Preço, Texto, Preço"
+        for (let i = 0; i < segments.length; i += 2) {
+            const labelText = segments[i]?.trim();
+            const priceValue = parseFloat(segments[i+1]);
 
-            if (!isNaN(price)) {
-                const line = obj.series.createPriceLine({
-                    price: price,
+            if (!isNaN(priceValue)) {
+                const priceLine = obj.series.createPriceLine({
+                    price: priceValue,
                     color: '#2962ff',
                     lineWidth: 1,
                     lineStyle: LightweightCharts.LineStyle.Solid,
                     axisLabelVisible: true,
-                    title: label,
+                    title: labelText,
                 });
-                obj.lines.push(line);
+                obj.lines.push(priceLine);
             }
         }
     }
