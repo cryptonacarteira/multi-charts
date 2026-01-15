@@ -2,18 +2,17 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Range - Multi Dashboard</title>
+    <title>Crypto Range - Dashboard</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        /* Força o fundo escuro imediatamente */
         html, body { 
             margin: 0; 
             padding: 0; 
             background-color: #06080f !important; 
             color: white; 
             font-family: sans-serif; 
-            height: 100%; 
-            width: 100%; 
+            height: 100vh; 
+            width: 100vw; 
             overflow: hidden; 
         }
         header { 
@@ -33,17 +32,17 @@
             gap: 2px; 
             padding: 2px; 
             box-sizing: border-box;
-            background-color: #06080f;
         }
         .chart-container { 
             background: #131722; 
             border: 1px solid #2a2e39; 
             display: flex; 
-            flex-direction: column; 
-            min-height: 0; /* Evita que o gráfico quebre a grade */
+            flex-direction: column;
+            overflow: hidden;
         }
         .chart-header { 
-            padding: 6px; 
+            height: 35px;
+            padding: 0 8px; 
             background: #1c222d; 
             display: flex; 
             align-items: center; 
@@ -58,116 +57,105 @@
             color: #4ade80; 
             font-size: 10px; 
             padding: 4px; 
-            border-radius: 3px; 
-            outline: none;
+            border-radius: 3px;
         }
-        .canvas-area { flex: 1; width: 100%; height: 100%; }
+        .canvas-area { 
+            flex: 1; 
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: bold; color: #fff;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
+    <div style="font-weight: bold;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
 </header>
 
 <div class="grid" id="mainGrid">
-    </div>
+    <div class="chart-container"><div class="chart-header"><span>SPX 500</span><input type="text" id="input-c1" oninput="processData('c1')"></div><div id="canvas-c1" class="canvas-area"></div></div>
+    <div class="chart-container"><div class="chart-header"><span>NASDAQ</span><input type="text" id="input-c2" oninput="processData('c2')"></div><div id="canvas-c2" class="canvas-area"></div></div>
+    <div class="chart-container"><div class="chart-header"><span>SPY</span><input type="text" id="input-c3" oninput="processData('c3')"></div><div id="canvas-c3" class="canvas-area"></div></div>
+    <div class="chart-container"><div class="chart-header"><span>GOLD</span><input type="text" id="input-c4" oninput="processData('c4')"></div><div id="canvas-c4" class="canvas-area"></div></div>
+    <div class="chart-container"><div class="chart-header"><span>BITCOIN</span><input type="text" id="input-c5" oninput="processData('c5')"></div><div id="canvas-c5" class="canvas-area"></div></div>
+    <div class="chart-container"><div class="chart-header"><span>VIX</span><input type="text" id="input-c6" oninput="processData('c6')"></div><div id="canvas-c6" class="canvas-area"></div></div>
+</div>
 
 <script>
-    const config = [
-        { id: 'c1', name: 'SPX 500' }, { id: 'c2', name: 'NASDAQ' }, { id: 'c3', name: 'SPY' },
-        { id: 'c4', name: 'GOLD' }, { id: 'c5', name: 'BITCOIN' }, { id: 'c6', name: 'VIX' }
-    ];
-
     const chartObjects = {};
+    const ids = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
 
-    function initCharts() {
-        const grid = document.getElementById('mainGrid');
-        grid.innerHTML = ''; // Limpa antes de criar
-
-        config.forEach(item => {
-            const container = document.createElement('div');
-            container.className = 'chart-container';
-            container.innerHTML = `
-                <div class="chart-header">
-                    <span>${item.name}</span>
-                    <input type="text" id="input-${item.id}" placeholder="Cole os dados aqui..." oninput="processData('${item.id}')">
-                </div>
-                <div class="canvas-area" id="canvas-${item.id}"></div>
-            `;
-            grid.appendChild(container);
-
-            // Inicializa o widget de gráfico
-            const chart = LightweightCharts.createChart(document.getElementById(`canvas-${item.id}`), {
+    function init() {
+        ids.forEach(id => {
+            const container = document.getElementById(`canvas-${id}`);
+            const chart = LightweightCharts.createChart(container, {
+                width: container.clientWidth,
+                height: container.clientHeight,
                 layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
                 grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
-                timeScale: { borderColor: '#2a2e39' },
-                priceScale: { borderColor: '#2a2e39' }
             });
 
             const series = chart.addCandlestickSeries({
                 upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
             });
 
-            // Dados de exemplo para preencher o gráfico
+            // Gerar 100 velas de exemplo
             const data = [];
             let t = new Date();
             t.setDate(t.getDate() - 100);
             for(let i=0; i<100; i++) {
                 data.push({
                     time: t.toISOString().split('T')[0],
-                    open: 100 + Math.random(), high: 102, low: 98, close: 100 + Math.random()
+                    open: 100 + Math.random()*2, high: 105, low: 95, close: 100 + Math.random()*2
                 });
                 t.setDate(t.getDate() + 1);
             }
             series.setData(data);
             chart.timeScale().fitContent();
 
-            chartObjects[item.id] = { chart, series, lines: [] };
+            chartObjects[id] = { chart, series, lines: [] };
 
-            // Recupera dados salvos no navegador
-            const saved = localStorage.getItem(`range-data-${item.id}`);
+            // Carregar dados salvos
+            const saved = localStorage.getItem(`data-${id}`);
             if(saved) {
-                document.getElementById(`input-${item.id}`).value = saved;
-                processData(item.id);
+                document.getElementById(`input-${id}`).value = saved;
+                processData(id);
             }
         });
     }
 
     function processData(id) {
-        const rawText = document.getElementById(`input-${id}`).value;
-        localStorage.setItem(`range-data-${id}`, rawText); 
-        
+        const raw = document.getElementById(`input-${id}`).value;
+        localStorage.setItem(`data-${id}`, raw);
         const obj = chartObjects[id];
-        if (!obj) return;
+        const parts = raw.split(',');
 
-        const segments = rawText.split(',');
         obj.lines.forEach(l => obj.series.removePriceLine(l));
         obj.lines = [];
 
-        for (let i = 0; i < segments.length; i += 2) {
-            const label = segments[i]?.trim();
-            const price = parseFloat(segments[i+1]);
+        for (let i = 0; i < parts.length; i += 2) {
+            const label = parts[i]?.trim();
+            const price = parseFloat(parts[i+1]);
             if (!isNaN(price)) {
-                const pLine = obj.series.createPriceLine({
-                    price: price,
-                    color: '#2962ff',
-                    lineWidth: 1,
-                    axisLabelVisible: true,
-                    title: label,
+                const line = obj.series.createPriceLine({
+                    price: price, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label,
                 });
-                obj.lines.push(pLine);
+                obj.lines.push(line);
             }
         }
     }
 
-    // Garante que o script rode após o carregamento da biblioteca
-    window.addEventListener('load', initCharts);
-    // Ajusta o tamanho se a janela mudar
-    window.addEventListener('resize', () => {
-        Object.values(chartObjects).forEach(obj => obj.chart.resize(0,0)); // Força recalcular
-        initCharts(); 
-    });
+    // Aguarda um pouco para o navegador calcular o tamanho das divs
+    window.onload = () => setTimeout(init, 300);
+
+    window.onresize = () => {
+        ids.forEach(id => {
+            const container = document.getElementById(`canvas-${id}`);
+            if(chartObjects[id]) {
+                chartObjects[id].chart.resize(container.clientWidth, container.clientHeight);
+            }
+        });
+    };
 </script>
 </body>
 </html>
