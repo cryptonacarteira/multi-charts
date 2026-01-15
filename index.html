@@ -2,57 +2,120 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Range - Dashboard PRO</title>
+    <title>Crypto Range - Multi Dashboard</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        html, body { height: 100%; margin: 0; padding: 0; background-color: #06080f; color: #ffffff; font-family: sans-serif; overflow: hidden; }
-        .grid-container {
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            grid-template-rows: repeat(2, 1fr);
-            gap: 2px; 
-            height: 100vh; 
-            padding: 2px; 
-            box-sizing: border-box;
-        }
-        .chart-box { background: #131722; border: 1px solid #2a2e39; }
+        body { margin: 0; background: #06080f; color: white; font-family: sans-serif; }
+        header { height: 40px; background: #131722; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #2a2e39; font-weight: bold; color: #2962ff; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); height: calc(100vh - 40px); gap: 4px; padding: 4px; box-sizing: border-box; }
+        .chart-container { background: #131722; border: 1px solid #2a2e39; display: flex; flex-direction: column; }
+        .chart-header { padding: 5px; background: #1c222d; display: flex; gap: 5px; }
+        .chart-header input { flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; font-size: 10px; padding: 3px; }
+        .chart-header span { font-size: 12px; font-weight: bold; min-width: 50px; color: #94a3b8; }
+        .canvas-area { flex: 1; position: relative; }
     </style>
 </head>
 <body>
 
-    <div class="grid-container">
-        <div id="c1" class="chart-box"></div>
-        <div id="c2" class="chart-box"></div>
-        <div id="c3" class="chart-box"></div>
-        <div id="c4" class="chart-box"></div>
-        <div id="c5" class="chart-box"></div>
-        <div id="c6" class="chart-box"></div>
+<header>CRYPTO-RANGE MULTI-INPUT</header>
+
+<div class="grid" id="mainGrid">
     </div>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script type="text/javascript">
-        function loadChart(id, symbol) {
-            new TradingView.widget({
-                "autosize": true,
-                "symbol": symbol,
-                "interval": "D",
-                "theme": "dark",
-                "style": "1",
-                "locale": "br",
-                "toolbar_bg": "#131722",
-                "container_id": id,
-                "hide_top_toolbar": false,     // GARANTE QUE O FX APAREÇA
-                "hide_side_toolbar": false,    // MOSTRA BARRA LATERAL DE DESENHO
-                "withdateranges": true,
-                "allow_symbol_change": true,
-                "save_image": false,
-                "enabled_features": ["study_templates"],
-                "studies": []
-            });
-        }
+<script>
+    const assets = [
+        { id: 'c1', name: 'SPX', symbol: 'SPX' },
+        { id: 'c2', name: 'SPY', symbol: 'SPY' },
+        { id: 'c3', name: 'QQQ', symbol: 'QQQ' },
+        { id: 'c4', name: 'XAUUSD', symbol: 'GOLD' },
+        { id: 'c5', name: 'BTCUSDT', symbol: 'BTC' },
+        { id: 'c6', name: 'VIX', symbol: 'VIX' }
+    ];
 
-        loadChart("c1", "CAPITALCOM:US500"); loadChart("c2", "CAPITALCOM:US100");
-        loadChart("c3", "AMEX:SPY"); loadChart("c4", "OANDA:XAUUSD");
-        loadChart("c5", "NASDAQ:QQQ"); loadChart("c6", "CBOE:VXX");
-    </script>
+    const chartObjects = {};
+
+    function init() {
+        const grid = document.getElementById('mainGrid');
+        
+        assets.forEach(asset => {
+            // Criar estrutura HTML
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.innerHTML = `
+                <div class="chart-header">
+                    <span>${asset.name}</span>
+                    <input type="text" id="input-${asset.id}" placeholder="Cole o texto do ${asset.name}..." oninput="updateChart('${asset.id}')">
+                </div>
+                <div class="canvas-area" id="canvas-${asset.id}"></div>
+            `;
+            grid.appendChild(container);
+
+            // Criar Gráfico
+            const chart = LightweightCharts.createChart(document.getElementById(`canvas-${asset.id}`), {
+                layout: { backgroundColor: '#131722', textColor: '#d1d4dc' },
+                grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
+                timeScale: { borderColor: '#2a2e39' },
+            });
+
+            const candleSeries = chart.addCandlestickSeries({
+                upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+            });
+
+            // Gerar dados fictícios (Enquanto não conectamos API real)
+            const data = [];
+            let time = new Date(2025, 0, 1);
+            for(let i=0; i<100; i++) {
+                data.push({
+                    time: time.toISOString().split('T')[0],
+                    open: 100 + Math.random()*10, high: 115, low: 95, close: 105
+                });
+                time.setDate(time.getDate() + 1);
+            }
+            candleSeries.setData(data);
+
+            chartObjects[asset.id] = { chart, series: candleSeries, lines: [] };
+
+            // Tentar carregar dados salvos do localStorage
+            const saved = localStorage.getItem(`data-${asset.id}`);
+            if(saved) {
+                document.getElementById(`input-${asset.id}`).value = saved;
+                updateChart(asset.id);
+            }
+        });
+    }
+
+    function updateChart(id) {
+        const raw = document.getElementById(`input-${id}`).value;
+        localStorage.setItem(`data-${id}`, raw); // Salva para não perder ao fechar
+        
+        const obj = chartObjects[id];
+        const parts = raw.split(',');
+
+        // Limpar linhas anteriores
+        obj.lines.forEach(l => obj.series.removePriceLine(l));
+        obj.lines = [];
+
+        // Lógica do seu Crypto-Range (Nome, Preço)
+        // Pula de 2 em 2: Texto, Valor, Texto, Valor...
+        for (let i = 0; i < parts.length; i += 2) {
+            const label = parts[i]?.trim();
+            const price = parseFloat(parts[i+1]);
+
+            if (!isNaN(price)) {
+                const line = obj.series.createPriceLine({
+                    price: price,
+                    color: '#2962ff',
+                    lineWidth: 1,
+                    lineStyle: LightweightCharts.LineStyle.Solid,
+                    axisLabelVisible: true,
+                    title: label,
+                });
+                obj.lines.push(line);
+            }
+        }
+    }
+
+    window.onload = init;
+</script>
 </body>
 </html>
