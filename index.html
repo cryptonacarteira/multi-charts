@@ -2,38 +2,22 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Range - Multi-Chart PRO</title>
+    <title>Crypto Range - Dashboard PRO</title>
     <style>
         html, body { height: 100%; margin: 0; padding: 0; background-color: #06080f; color: #ffffff; font-family: sans-serif; overflow: hidden; }
-        header { 
-            padding: 0 20px; 
-            background-color: #131722; 
-            border-bottom: 1px solid #2a2e39; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            height: 45px;
-        }
         .grid-container {
-            display: grid;
+            display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             grid-template-rows: repeat(2, 1fr);
-            gap: 2px;
-            height: calc(100vh - 45px);
-            padding: 2px;
+            gap: 2px; 
+            height: 100vh; 
+            padding: 2px; 
             box-sizing: border-box;
         }
         .chart-box { background: #131722; border: 1px solid #2a2e39; }
-        .logo { color: #2962ff; font-weight: bold; font-size: 16px; }
-        .status { font-size: 11px; color: #facc15; }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="logo">CRYPTO-RANGE</div>
-        <div class="status">Sincronize sua conta TradingView em outra aba para liberar seus scripts</div>
-    </header>
 
     <div class="grid-container">
         <div id="c1" class="chart-box"></div>
@@ -51,38 +35,24 @@
                 "autosize": true,
                 "symbol": symbol,
                 "interval": "D",
-                "timezone": "America/Sao_Paulo",
                 "theme": "dark",
                 "style": "1",
                 "locale": "br",
                 "toolbar_bg": "#131722",
-                "enable_publishing": false,
-                "withdateranges": true,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
                 "container_id": id,
-                "details": true,
-                "hotlist": true,
-                "calendar": true,
-                /* Habilita recursos que tentam forçar a leitura da sua biblioteca local */
-                "enabled_features": [
-                    "study_templates",
-                    "use_localstorage_for_settings_save",
-                    "header_saveload"
-                ],
-                "studies": [],
-                "overrides": {
-                    "volumePaneSize": "tiny"
-                }
+                "hide_top_toolbar": false,     // GARANTE QUE O FX APAREÇA
+                "hide_side_toolbar": false,    // MOSTRA BARRA LATERAL DE DESENHO
+                "withdateranges": true,
+                "allow_symbol_change": true,
+                "save_image": false,
+                "enabled_features": ["study_templates"],
+                "studies": []
             });
         }
 
-        loadChart("c1", "CAPITALCOM:US500");   
-        loadChart("c2", "CAPITALCOM:US100");   
-        loadChart("c3", "AMEX:SPY");            
-        loadChart("c4", "OANDA:XAUUSD");        
-        loadChart("c5", "NASDAQ:QQQ");          
-        loadChart("c6", "CBOE:VXX"); 
+        loadChart("c1", "CAPITALCOM:US500"); loadChart("c2", "CAPITALCOM:US100");
+        loadChart("c3", "AMEX:SPY"); loadChart("c4", "OANDA:XAUUSD");
+        loadChart("c5", "NASDAQ:QQQ"); loadChart("c6", "CBOE:VXX");
     </script>
 </body>
 </html>
