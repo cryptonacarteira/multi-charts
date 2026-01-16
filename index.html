@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Range - Dashboard PRO</title>
+    <title>Crypto Range - Dashboard Yahoo</title>
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -25,35 +25,61 @@
 <body>
 
 <header>
-    <span style="font-weight: bold; font-size: 14px;">CRYPTO RANGE <span style="color: #2962ff;">MULTI-DATA</span></span>
-    <span id="status" style="font-size: 10px; color: #94a3b8;">Dados: Binance & Yahoo API</span>
+    <span style="font-weight: bold; font-size: 14px;">CRYPTO RANGE <span style="color: #2962ff;">YAHOO LIVE</span></span>
+    <span id="status" style="font-size: 10px; color: #94a3b8;">Status: A carregar dados reais...</span>
 </header>
 
 <div class="grid" id="mainGrid"></div>
 
 <script>
-    // Configuração mista: Cripto e Índices
+    // Configuração com Tickers do Yahoo Finance
     const config = [
-        { id: 'c1', name: 'SPY (S&P500)', symbol: 'SPY', type: 'stock' },
-        { id: 'c2', name: 'QQQ (Nasdaq)', symbol: 'QQQ', type: 'stock' },
-        { id: 'c3', name: 'BTC/USDT', symbol: 'BTCUSDT', type: 'crypto' },
-        { id: 'c4', name: 'GOLD (XAU)', symbol: 'GC=F', type: 'stock' },
-        { id: 'c5', name: 'ETH/USDT', symbol: 'ETHUSDT', type: 'crypto' },
-        { id: 'c6', name: 'VIX Index', symbol: '^VIX', type: 'stock' }
+        { id: 'c1', name: 'S&P 500', symbol: '^GSPC' }, // Índice S&P 500
+        { id: 'c2', name: 'NASDAQ', symbol: '^IXIC' }, // Índice Nasdaq
+        { id: 'c3', name: 'BITCOIN', symbol: 'BTC-USD' },
+        { id: 'c4', name: 'GOLD', symbol: 'GC=F' },      // Futuros de Ouro
+        { id: 'c5', name: 'ETHEREUM', symbol: 'ETH-USD' },
+        { id: 'c6', name: 'VIX Index', symbol: '^VIX' }
     ];
 
     const charts = {};
 
-    async function init() {
+    async function loadData(symbol, series, chart) {
+        try {
+            // Usamos um proxy público para evitar o bloqueio do Yahoo Finance
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1h&range=5d`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+            
+            const response = await fetch(proxyUrl);
+            const json = await response.json();
+            const result = json.chart.result[0];
+            const quote = result.indicators.quote[0];
+            const timestamps = result.timestamp;
+
+            const formattedData = timestamps.map((ts, i) => ({
+                time: ts,
+                open: quote.open[i] || quote.close[i-1],
+                high: quote.high[i] || quote.close[i-1],
+                low: quote.low[i] || quote.close[i-1],
+                close: quote.close[i]
+            })).filter(d => d.open !== null);
+
+            series.setData(formattedData);
+            chart.timeScale().fitContent();
+        } catch (e) {
+            console.error("Erro ao carregar " + symbol, e);
+        }
+    }
+
+    function init() {
         const grid = document.getElementById('mainGrid');
-        
-        for (const item of config) {
+        config.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'chart-card';
             card.innerHTML = `
                 <div class="controls">
                     <span class="label">${item.name}</span>
-                    <input type="text" id="input-${item.id}" class="input-field" placeholder="Nome, Preço, Nome, Preço..." oninput="updateLevels('${item.id}')">
+                    <input type="text" id="input-${item.id}" class="input-field" placeholder="Cole os dados aqui..." oninput="updateLevels('${item.id}')">
                 </div>
                 <div id="canvas-${item.id}" class="canvas-container"></div>
             `;
@@ -72,67 +98,36 @@
 
             charts[item.id] = { chart, series, priceLines: [] };
 
-            // Lógica de busca de dados
-            if (item.type === 'crypto') {
-                loadBinanceData(item.symbol, series, chart);
-            } else {
-                loadStockData(item.symbol, series, chart);
-            }
+            loadData(item.symbol, series, chart);
 
-            const saved = localStorage.getItem(`pro-save-${item.id}`);
+            const saved = localStorage.getItem(`yahoo-v5-${item.id}`);
             if(saved) {
                 document.getElementById(`input-${item.id}`).value = saved;
                 updateLevels(item.id);
             }
 
             new ResizeObserver(() => chart.resize(container.clientWidth, container.clientHeight)).observe(container);
-        }
-    }
-
-    // Busca Cripto na Binance
-    function loadBinanceData(symbol, series, chart) {
-        fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`)
-            .then(res => res.json())
-            .then(data => {
-                const formatted = data.map(d => ({
-                    time: d[0] / 1000,
-                    open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
-                }));
-                series.setData(formatted);
-                chart.timeScale().fitContent();
-            });
-    }
-
-    // Busca Índices (Simulação via API Yahoo ou similar através de Proxy)
-    // Nota: Como APIs de ações exigem chaves privadas, usamos um agregador público para o exemplo
-    function loadStockData(symbol, series, chart) {
-        // Exemplo de como os dados chegam de APIs de mercado tradicional
-        // Aqui buscamos dados de um serviço espelho gratuito para o GitHub
-        fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1h&range=5d`)
-            .then(res => res.json())
-                .catch(() => {
-                    // Fallback se a API bloquear o GitHub: mostra dados de demonstração
-                    console.log("Aguardando feed de índices...");
-                });
-            // Nota: Para Índices no GitHub Pages, o ideal é usar TwelveData com API KEY gratuita
+        });
     }
 
     function updateLevels(id) {
         const val = document.getElementById(`input-${id}`).value;
-        localStorage.setItem(`pro-save-${id}`, val);
-        const current = charts[id];
-        if(!current) return;
-        current.priceLines.forEach(l => current.series.removePriceLine(l));
-        current.priceLines = [];
+        localStorage.setItem(`yahoo-v5-${id}`, val);
+        const obj = charts[id];
+        if(!obj) return;
+        
+        obj.priceLines.forEach(l => obj.series.removePriceLine(l));
+        obj.priceLines = [];
+        
         const parts = val.split(',');
         for (let i = 0; i < parts.length; i += 2) {
             const label = parts[i]?.trim();
             const price = parseFloat(parts[i+1]);
             if (!isNaN(price)) {
-                const line = current.series.createPriceLine({
+                const line = obj.series.createPriceLine({
                     price: price, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label,
                 });
-                current.priceLines.push(line);
+                obj.priceLines.push(line);
             }
         }
     }
