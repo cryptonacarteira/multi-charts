@@ -3,153 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <title>Crypto Range - Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         * { box-sizing: border-box; }
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            background-color: #06080f !important; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden;
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            background-color: #06080f; color: white; font-family: sans-serif; overflow: hidden; 
         }
-        .main-header { 
-            height: 40px; 
-            background: #131722; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 15px; 
-            border-bottom: 1px solid #2a2e39;
-        }
+        .header { height: 40px; background: #131722; border-bottom: 1px solid #2a2e39; display: flex; align-items: center; padding: 0 15px; }
         .grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            grid-template-rows: repeat(2, 1fr); 
-            height: calc(100vh - 40px); 
-            gap: 2px; 
-            padding: 2px;
-            background: #000;
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
+            height: calc(100vh - 40px); gap: 2px; padding: 2px; background: #000;
         }
-        .chart-item { 
-            background: #131722; 
-            display: flex; 
-            flex-direction: column;
-            border: 1px solid #2a2e39;
-        }
-        .chart-controls { 
-            height: 35px;
-            background: #1c222d;
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            gap: 10px;
-        }
-        .asset-name { font-size: 11px; font-weight: bold; color: #2962ff; white-space: nowrap; }
-        .input-box { 
-            flex: 1; 
-            background: #06080f; 
-            border: 1px solid #363c4e; 
-            color: #4ade80; 
-            font-size: 10px; 
-            padding: 4px 8px;
-            border-radius: 3px;
-        }
-        .chart-area { flex: 1; width: 100%; }
+        .chart-card { background: #131722; display: flex; flex-direction: column; border: 1px solid #2a2e39; }
+        .controls { height: 35px; background: #1c222d; display: flex; align-items: center; padding: 0 8px; gap: 10px; border-bottom: 1px solid #2a2e39; }
+        .label { font-size: 10px; font-weight: bold; color: #2962ff; min-width: 50px; }
+        .input-field { flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; font-size: 10px; padding: 4px; border-radius: 3px; }
+        .canvas-container { flex: 1; width: 100%; position: relative; }
     </style>
 </head>
 <body>
 
-<div class="main-header">
-    <span style="font-weight: bold; font-size: 14px;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></span>
+<div class="header">
+    <span style="font-weight: bold;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></span>
 </div>
 
 <div class="grid">
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">SPX 500</span><input type="text" id="in-1" class="input-box" oninput="run('1')"></div><div id="graph-1" class="chart-area"></div></div>
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">NASDAQ</span><input type="text" id="in-2" class="input-box" oninput="run('2')"></div><div id="graph-2" class="chart-area"></div></div>
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">SPY</span><input type="text" id="in-3" class="input-box" oninput="run('3')"></div><div id="graph-3" class="chart-area"></div></div>
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">GOLD</span><input type="text" id="in-4" class="input-box" oninput="run('4')"></div><div id="graph-4" class="chart-area"></div></div>
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">BITCOIN</span><input type="text" id="in-5" class="input-box" oninput="run('5')"></div><div id="graph-5" class="chart-area"></div></div>
-    <div class="chart-item"><div class="chart-controls"><span class="asset-name">VIX</span><input type="text" id="in-6" class="input-box" oninput="run('6')"></div><div id="graph-6" class="chart-area"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">SPX 500</span><input type="text" id="in-1" class="input-field" oninput="drawLines('1')"></div><div id="graph-1" class="canvas-container"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">NASDAQ</span><input type="text" id="in-2" class="input-field" oninput="drawLines('2')"></div><div id="graph-2" class="canvas-container"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">SPY</span><input type="text" id="in-3" class="input-field" oninput="drawLines('3')"></div><div id="graph-3" class="canvas-container"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">GOLD</span><input type="text" id="in-4" class="input-field" oninput="drawLines('4')"></div><div id="graph-4" class="canvas-container"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">BITCOIN</span><input type="text" id="in-5" class="input-field" oninput="drawLines('5')"></div><div id="graph-5" class="canvas-container"></div></div>
+    <div class="chart-card"><div class="controls"><span class="label">VIX</span><input type="text" id="in-6" class="input-field" oninput="drawLines('6')"></div><div id="graph-6" class="canvas-container"></div></div>
 </div>
 
 <script>
-    const stores = {};
+    const state = {};
     const ids = ['1', '2', '3', '4', '5', '6'];
 
-    function setup() {
+    function start() {
+        // Verifica se a biblioteca carregou, se não, tenta o segundo link (CDNJS)
         if (typeof LightweightCharts === 'undefined') {
-            console.error("Erro ao carregar a biblioteca. Tentando novamente...");
-            return;
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js";
+            script.onload = build;
+            document.head.appendChild(script);
+        } else {
+            build();
         }
+    }
 
+    function build() {
         ids.forEach(id => {
-            const el = document.getElementById(`graph-${id}`);
-            const chart = LightweightCharts.createChart(el, {
-                width: el.clientWidth,
-                height: el.clientHeight,
+            const container = document.getElementById(`graph-${id}`);
+            
+            const chart = LightweightCharts.createChart(container, {
+                width: container.offsetWidth,
+                height: container.offsetHeight,
                 layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
                 grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
-                timeScale: { visible: true },
+                timeScale: { borderColor: '#2a2e39' },
+                priceScale: { borderColor: '#2a2e39' }
             });
 
             const series = chart.addCandlestickSeries({
                 upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
             });
 
-            // Gerar 50 velas de mentira
-            const data = [];
-            let t = new Date();
-            for(let i=0; i<50; i++) {
-                data.push({ time: t.toISOString().split('T')[0], open: 100, high: 105, low: 95, close: 102 });
-                t.setDate(t.getDate() + 1);
+            // Gerar 60 velas de amostra para visualizar
+            const sampleData = [];
+            let date = new Date();
+            date.setDate(date.getDate() - 60);
+            for(let i=0; i<60; i++) {
+                sampleData.push({
+                    time: date.toISOString().split('T')[0],
+                    open: 100 + i, high: 105 + i, low: 95 + i, close: 102 + i
+                });
+                date.setDate(date.getDate() + 1);
             }
-            series.setData(data);
+            series.setData(sampleData);
             chart.timeScale().fitContent();
 
-            stores[id] = { chart, series, lines: [] };
+            state[id] = { chart, series, activeLines: [] };
 
-            const old = localStorage.getItem(`save-${id}`);
-            if(old) {
-                document.getElementById(`in-${id}`).value = old;
-                run(id);
+            // Carregar histórico
+            const history = localStorage.getItem(`data-v2-${id}`);
+            if(history) {
+                document.getElementById(`in-${id}`).value = history;
+                drawLines(id);
             }
         });
     }
 
-    function run(id) {
-        const txt = document.getElementById(`in-${id}`).value;
-        localStorage.setItem(`save-${id}`, txt);
-        const s = stores[id];
-        if(!s) return;
+    function drawLines(id) {
+        const inputStr = document.getElementById(`in-${id}`).value;
+        localStorage.setItem(`data-v2-${id}`, inputStr);
+        
+        const current = state[id];
+        if(!current) return;
 
-        s.lines.forEach(l => s.series.removePriceLine(l));
-        s.lines = [];
+        // Limpar linhas
+        current.activeLines.forEach(l => current.series.removePriceLine(l));
+        current.activeLines = [];
 
-        const parts = txt.split(',');
+        const parts = inputStr.split(',');
         for (let i = 0; i < parts.length; i += 2) {
-            const label = parts[i]?.trim();
+            const name = parts[i]?.trim();
             const val = parseFloat(parts[i+1]);
             if (!isNaN(val)) {
-                const line = s.series.createPriceLine({
-                    price: val, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label,
+                const line = current.series.createPriceLine({
+                    price: val, 
+                    color: '#2962ff', 
+                    lineWidth: 1, 
+                    axisLabelVisible: true, 
+                    title: name,
+                    lineStyle: 0 // Solid
                 });
-                s.lines.push(line);
+                current.activeLines.push(line);
             }
         }
     }
 
-    // Inicialização forçada
-    window.addEventListener('load', () => {
-        setTimeout(setup, 500);
-    });
+    // Inicialização com pequeno delay para garantir que o layout CSS estabilizou
+    window.addEventListener('load', () => setTimeout(start, 500));
 
+    // Ajuste de redimensionamento
     window.addEventListener('resize', () => {
         ids.forEach(id => {
-            const el = document.getElementById(`graph-${id}`);
-            if(stores[id]) stores[id].chart.resize(el.clientWidth, el.clientHeight);
+            const container = document.getElementById(`graph-${id}`);
+            if(state[id]) state[id].chart.resize(container.offsetWidth, container.offsetHeight);
         });
     });
 </script>
