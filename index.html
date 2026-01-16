@@ -3,159 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <title>Crypto Range - Dashboard</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js"></script>
     <style>
+        * { box-sizing: border-box; }
         html, body { 
             margin: 0; 
             padding: 0; 
             background-color: #06080f !important; 
-            color: white; 
-            font-family: sans-serif; 
             height: 100vh; 
             width: 100vw; 
-            overflow: hidden; 
+            overflow: hidden;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        header { 
-            height: 45px; 
+        .main-header { 
+            height: 40px; 
             background: #131722; 
             display: flex; 
             align-items: center; 
-            padding: 0 20px; 
-            border-bottom: 1px solid #2a2e39; 
-            box-sizing: border-box;
+            padding: 0 15px; 
+            border-bottom: 1px solid #2a2e39;
         }
         .grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             grid-template-rows: repeat(2, 1fr); 
-            height: calc(100vh - 45px); 
+            height: calc(100vh - 40px); 
             gap: 2px; 
-            padding: 2px; 
-            box-sizing: border-box;
+            padding: 2px;
+            background: #000;
         }
-        .chart-container { 
+        .chart-item { 
             background: #131722; 
-            border: 1px solid #2a2e39; 
             display: flex; 
             flex-direction: column;
-            overflow: hidden;
+            border: 1px solid #2a2e39;
         }
-        .chart-header { 
+        .chart-controls { 
             height: 35px;
-            padding: 0 8px; 
-            background: #1c222d; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            border-bottom: 1px solid #2a2e39;
+            background: #1c222d;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 10px;
         }
-        .chart-header span { font-size: 11px; font-weight: bold; color: #2962ff; min-width: 60px; }
-        .chart-header input { 
+        .asset-name { font-size: 11px; font-weight: bold; color: #2962ff; white-space: nowrap; }
+        .input-box { 
             flex: 1; 
             background: #06080f; 
             border: 1px solid #363c4e; 
             color: #4ade80; 
             font-size: 10px; 
-            padding: 4px; 
+            padding: 4px 8px;
             border-radius: 3px;
         }
-        .canvas-area { 
-            flex: 1; 
-            width: 100%;
-            height: 100%;
-        }
+        .chart-area { flex: 1; width: 100%; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-weight: bold;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></div>
-</header>
+<div class="main-header">
+    <span style="font-weight: bold; font-size: 14px;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></span>
+</div>
 
-<div class="grid" id="mainGrid">
-    <div class="chart-container"><div class="chart-header"><span>SPX 500</span><input type="text" id="input-c1" oninput="processData('c1')"></div><div id="canvas-c1" class="canvas-area"></div></div>
-    <div class="chart-container"><div class="chart-header"><span>NASDAQ</span><input type="text" id="input-c2" oninput="processData('c2')"></div><div id="canvas-c2" class="canvas-area"></div></div>
-    <div class="chart-container"><div class="chart-header"><span>SPY</span><input type="text" id="input-c3" oninput="processData('c3')"></div><div id="canvas-c3" class="canvas-area"></div></div>
-    <div class="chart-container"><div class="chart-header"><span>GOLD</span><input type="text" id="input-c4" oninput="processData('c4')"></div><div id="canvas-c4" class="canvas-area"></div></div>
-    <div class="chart-container"><div class="chart-header"><span>BITCOIN</span><input type="text" id="input-c5" oninput="processData('c5')"></div><div id="canvas-c5" class="canvas-area"></div></div>
-    <div class="chart-container"><div class="chart-header"><span>VIX</span><input type="text" id="input-c6" oninput="processData('c6')"></div><div id="canvas-c6" class="canvas-area"></div></div>
+<div class="grid">
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">SPX 500</span><input type="text" id="in-1" class="input-box" oninput="run('1')"></div><div id="graph-1" class="chart-area"></div></div>
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">NASDAQ</span><input type="text" id="in-2" class="input-box" oninput="run('2')"></div><div id="graph-2" class="chart-area"></div></div>
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">SPY</span><input type="text" id="in-3" class="input-box" oninput="run('3')"></div><div id="graph-3" class="chart-area"></div></div>
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">GOLD</span><input type="text" id="in-4" class="input-box" oninput="run('4')"></div><div id="graph-4" class="chart-area"></div></div>
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">BITCOIN</span><input type="text" id="in-5" class="input-box" oninput="run('5')"></div><div id="graph-5" class="chart-area"></div></div>
+    <div class="chart-item"><div class="chart-controls"><span class="asset-name">VIX</span><input type="text" id="in-6" class="input-box" oninput="run('6')"></div><div id="graph-6" class="chart-area"></div></div>
 </div>
 
 <script>
-    const chartObjects = {};
-    const ids = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+    const stores = {};
+    const ids = ['1', '2', '3', '4', '5', '6'];
 
-    function init() {
+    function setup() {
+        if (typeof LightweightCharts === 'undefined') {
+            console.error("Erro ao carregar a biblioteca. Tentando novamente...");
+            return;
+        }
+
         ids.forEach(id => {
-            const container = document.getElementById(`canvas-${id}`);
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: container.clientHeight,
+            const el = document.getElementById(`graph-${id}`);
+            const chart = LightweightCharts.createChart(el, {
+                width: el.clientWidth,
+                height: el.clientHeight,
                 layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
                 grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
+                timeScale: { visible: true },
             });
 
             const series = chart.addCandlestickSeries({
                 upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
             });
 
-            // Gerar 100 velas de exemplo
+            // Gerar 50 velas de mentira
             const data = [];
             let t = new Date();
-            t.setDate(t.getDate() - 100);
-            for(let i=0; i<100; i++) {
-                data.push({
-                    time: t.toISOString().split('T')[0],
-                    open: 100 + Math.random()*2, high: 105, low: 95, close: 100 + Math.random()*2
-                });
+            for(let i=0; i<50; i++) {
+                data.push({ time: t.toISOString().split('T')[0], open: 100, high: 105, low: 95, close: 102 });
                 t.setDate(t.getDate() + 1);
             }
             series.setData(data);
             chart.timeScale().fitContent();
 
-            chartObjects[id] = { chart, series, lines: [] };
+            stores[id] = { chart, series, lines: [] };
 
-            // Carregar dados salvos
-            const saved = localStorage.getItem(`data-${id}`);
-            if(saved) {
-                document.getElementById(`input-${id}`).value = saved;
-                processData(id);
+            const old = localStorage.getItem(`save-${id}`);
+            if(old) {
+                document.getElementById(`in-${id}`).value = old;
+                run(id);
             }
         });
     }
 
-    function processData(id) {
-        const raw = document.getElementById(`input-${id}`).value;
-        localStorage.setItem(`data-${id}`, raw);
-        const obj = chartObjects[id];
-        const parts = raw.split(',');
+    function run(id) {
+        const txt = document.getElementById(`in-${id}`).value;
+        localStorage.setItem(`save-${id}`, txt);
+        const s = stores[id];
+        if(!s) return;
 
-        obj.lines.forEach(l => obj.series.removePriceLine(l));
-        obj.lines = [];
+        s.lines.forEach(l => s.series.removePriceLine(l));
+        s.lines = [];
 
+        const parts = txt.split(',');
         for (let i = 0; i < parts.length; i += 2) {
             const label = parts[i]?.trim();
-            const price = parseFloat(parts[i+1]);
-            if (!isNaN(price)) {
-                const line = obj.series.createPriceLine({
-                    price: price, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label,
+            const val = parseFloat(parts[i+1]);
+            if (!isNaN(val)) {
+                const line = s.series.createPriceLine({
+                    price: val, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label,
                 });
-                obj.lines.push(line);
+                s.lines.push(line);
             }
         }
     }
 
-    // Aguarda um pouco para o navegador calcular o tamanho das divs
-    window.onload = () => setTimeout(init, 300);
+    // Inicialização forçada
+    window.addEventListener('load', () => {
+        setTimeout(setup, 500);
+    });
 
-    window.onresize = () => {
+    window.addEventListener('resize', () => {
         ids.forEach(id => {
-            const container = document.getElementById(`canvas-${id}`);
-            if(chartObjects[id]) {
-                chartObjects[id].chart.resize(container.clientWidth, container.clientHeight);
-            }
+            const el = document.getElementById(`graph-${id}`);
+            if(stores[id]) stores[id].chart.resize(el.clientWidth, el.clientHeight);
         });
-    };
+    });
 </script>
 </body>
 </html>
