@@ -2,130 +2,144 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Crypto Range - Multi Dashboard</title>
+    <title>Crypto Range - Dashboard</title>
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         * { box-sizing: border-box; }
-        html, body { 
-            margin: 0; padding: 0; height: 100vh; width: 100vw; 
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
             background-color: #06080f; color: white; font-family: sans-serif; overflow: hidden; 
         }
-        .header { height: 40px; background: #131722; border-bottom: 1px solid #2a2e39; display: flex; align-items: center; padding: 0 15px; }
+        header { height: 40px; background: #131722; border-bottom: 1px solid #2a2e39; display: flex; align-items: center; padding: 0 15px; }
         .grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            grid-template-rows: repeat(2, 1fr); 
-            height: calc(100vh - 40px); 
-            gap: 2px; 
-            padding: 2px; 
-            background: #000;
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); 
+            height: calc(100vh - 40px); gap: 2px; padding: 2px; background: #000;
         }
-        .chart-card { background: #131722; display: flex; flex-direction: column; border: 1px solid #2a2e39; min-height: 0; }
+        .chart-card { background: #131722; display: flex; flex-direction: column; border: 1px solid #2a2e39; }
         .controls { height: 35px; background: #1c222d; display: flex; align-items: center; padding: 0 8px; gap: 8px; border-bottom: 1px solid #2a2e39; }
         .label { font-size: 10px; font-weight: bold; color: #2962ff; min-width: 50px; }
         .input-field { flex: 1; background: #06080f; border: 1px solid #363c4e; color: #4ade80; font-size: 10px; padding: 4px; border-radius: 3px; outline: none; }
-        .canvas-container { flex: 1; width: 100%; height: 100%; position: relative; }
+        .canvas-container { flex: 1; width: 100%; position: relative; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <span style="font-weight: bold;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></span>
-</div>
+<header>
+    <span style="font-weight: bold; font-size: 14px;">CRYPTO RANGE <span style="color: #2962ff;">DASHBOARD</span></span>
+</header>
 
-<div class="grid">
-    <div class="chart-card"><div class="controls"><span class="label">SPX 500</span><input type="text" id="in-1" class="input-field" oninput="draw('1')"></div><div id="graph-1" class="canvas-container"></div></div>
-    <div class="chart-card"><div class="controls"><span class="label">NASDAQ</span><input type="text" id="in-2" class="input-field" oninput="draw('2')"></div><div id="graph-2" class="canvas-container"></div></div>
-    <div class="chart-card"><div class="controls"><span class="label">SPY</span><input type="text" id="in-3" class="input-field" oninput="draw('3')"></div><div id="graph-3" class="canvas-container"></div></div>
-    <div class="chart-card"><div class="controls"><span class="label">GOLD</span><input type="text" id="in-4" class="input-field" oninput="draw('4')"></div><div id="graph-4" class="canvas-container"></div></div>
-    <div class="chart-card"><div class="controls"><span class="label">BITCOIN</span><input type="text" id="in-5" class="input-field" oninput="draw('5')"></div><div id="graph-5" class="canvas-container"></div></div>
-    <div class="chart-card"><div class="controls"><span class="label">VIX</span><input type="text" id="in-6" class="input-field" oninput="draw('6')"></div><div id="graph-6" class="canvas-container"></div></div>
-</div>
+<div class="grid" id="mainGrid"></div>
 
 <script>
+    const ids = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+    const names = ['SPX 500', 'NASDAQ', 'SPY', 'GOLD', 'BITCOIN', 'VIX'];
     const charts = {};
-    const ids = ['1', '2', '3', '4', '5', '6'];
 
     function init() {
-        ids.forEach(id => {
-            const container = document.getElementById(`graph-${id}`);
+        const grid = document.getElementById('mainGrid');
+        
+        ids.forEach((id, index) => {
+            // Criar HTML dos cards
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `
+                <div class="controls">
+                    <span class="label">${names[index]}</span>
+                    <input type="text" id="input-${id}" class="input-field" placeholder="Cole o texto aqui..." oninput="updateLevels('${id}')">
+                </div>
+                <div id="canvas-${id}" class="canvas-container"></div>
+            `;
+            grid.appendChild(card);
+
+            const container = document.getElementById(`canvas-${id}`);
+
+            // A estrutura exata que você encontrou:
+            const chartOptions = { 
+                layout: { 
+                    textColor: '#d1d4dc', 
+                    background: { type: 'solid', color: '#131722' } 
+                },
+                grid: {
+                    vertLines: { color: '#1f222d' },
+                    horzLines: { color: '#1f222d' },
+                },
+                timeScale: { borderColor: '#2a2e39' },
+            };
+
+            const chart = LightweightCharts.createChart(container, chartOptions);
             
-            // Criar o gráfico com dimensões iniciais 0 (serão corrigidas pelo Observer)
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth,
-                height: container.clientHeight,
-                layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
-                grid: { vertLines: { color: '#1f222d' }, horzLines: { color: '#1f222d' } },
-                timeScale: { borderColor: '#2a2e39', timeVisible: true, barSpacing: 10 },
+            // Adicionando a série de Candlestick conforme seu achado
+            const candlestickSeries = chart.addCandlestickSeries({ 
+                upColor: '#26a69a', 
+                downColor: '#ef5350', 
+                borderVisible: false, 
+                wickUpColor: '#26a69a', 
+                wickDownColor: '#ef5350' 
             });
 
-            const series = chart.addCandlestickSeries({
-                upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
-            });
+            // Dados iniciais (Baseados no seu exemplo)
+            const data = [
+                { open: 10, high: 10.63, low: 9.49, close: 9.55, time: 1642427876 },
+                { open: 9.55, high: 10.30, low: 9.42, close: 9.94, time: 1642514276 },
+                { open: 9.94, high: 10.17, low: 9.92, close: 9.78, time: 1642600676 },
+                { open: 9.78, high: 10.59, low: 9.18, close: 9.51, time: 1642687076 },
+                { open: 9.51, high: 10.46, low: 9.10, close: 10.17, time: 1642773476 },
+                { open: 10.17, high: 10.96, low: 10.16, close: 10.47, time: 1642859876 },
+                { open: 10.47, high: 11.39, low: 10.40, close: 10.81, time: 1642946276 },
+                { open: 10.81, high: 11.60, low: 10.30, close: 10.75, time: 1643032676 },
+                { open: 10.75, high: 11.60, low: 10.49, close: 10.93, time: 1643119076 },
+                { open: 10.93, high: 11.53, low: 10.76, close: 10.96, time: 1643205476 }
+            ];
 
-            // Dados de exemplo espalhados no tempo para evitar a "lista vertical"
-            const sampleData = [];
-            let date = new Date(2025, 0, 1);
-            for(let i=0; i<100; i++) {
-                sampleData.push({
-                    time: date.toISOString().split('T')[0],
-                    open: 100 + Math.sin(i/5)*10, high: 112 + Math.sin(i/5)*10, 
-                    low: 98 + Math.sin(i/5)*10, close: 105 + Math.sin(i/5)*10
-                });
-                date.setDate(date.getDate() + 1);
-            }
-            series.setData(sampleData);
+            candlestickSeries.setData(data);
             chart.timeScale().fitContent();
 
-            charts[id] = { chart, series, lines: [] };
+            charts[id] = { chart, series: candlestickSeries, priceLines: [] };
 
-            // O segredo: Monitorar o tamanho real da div e ajustar o gráfico
-            const resizeObserver = new ResizeObserver(entries => {
-                for (let entry of entries) {
-                    const { width, height } = entry.contentRect;
-                    chart.resize(width, height);
-                    chart.timeScale().fitContent();
-                }
-            });
-            resizeObserver.observe(container);
-
-            // Carregar histórico salvo
-            const saved = localStorage.getItem(`data-v3-${id}`);
+            // Recuperar dados salvos
+            const saved = localStorage.getItem(`save-data-${id}`);
             if(saved) {
-                document.getElementById(`in-${id}`).value = saved;
-                draw(id);
+                document.getElementById(`input-${id}`).value = saved;
+                updateLevels(id);
             }
+
+            // Ajuste de tamanho automático
+            new ResizeObserver(() => {
+                chart.resize(container.clientWidth, container.clientHeight);
+            }).observe(container);
         });
     }
 
-    function draw(id) {
-        const val = document.getElementById(`in-${id}`).value;
-        localStorage.setItem(`data-v3-${id}`, val);
-        const obj = charts[id];
-        if(!obj) return;
+    function updateLevels(id) {
+        const val = document.getElementById(`input-${id}`).value;
+        localStorage.setItem(`save-data-${id}`, val);
+        
+        const current = charts[id];
+        if(!current) return;
 
-        obj.lines.forEach(l => obj.series.removePriceLine(l));
-        obj.lines = [];
+        // Limpa linhas antigas
+        current.priceLines.forEach(l => current.series.removePriceLine(l));
+        current.priceLines = [];
 
         const parts = val.split(',');
         for (let i = 0; i < parts.length; i += 2) {
             const label = parts[i]?.trim();
             const price = parseFloat(parts[i+1]);
+
             if (!isNaN(price)) {
-                const line = obj.series.createPriceLine({
-                    price: price, color: '#2962ff', lineWidth: 1, axisLabelVisible: true, title: label
+                const line = current.series.createPriceLine({
+                    price: price,
+                    color: '#2962ff',
+                    lineWidth: 1,
+                    axisLabelVisible: true,
+                    title: label,
                 });
-                obj.lines.push(line);
+                current.priceLines.push(line);
             }
         }
     }
 
-    // Inicializa quando o DOM estiver pronto
-    if (document.readyState === 'complete') {
-        init();
-    } else {
-        window.addEventListener('load', init);
-    }
+    window.onload = init;
 </script>
 </body>
 </html>
